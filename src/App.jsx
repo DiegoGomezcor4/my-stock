@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { supabase } from './lib/supabase'
 import { Auth } from './components/Auth'
+import { CatalogView } from './components/CatalogView'
 import { ProductForm } from './components/ProductForm'
 import { ProductList } from './components/ProductList'
 import { CustomerManager } from './components/CustomerManager'
@@ -14,6 +15,7 @@ import { useSales } from './hooks/useSales'
 function App() {
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -25,6 +27,7 @@ function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) setShowLogin(false);
     });
 
     return () => subscription.unsubscribe();
@@ -40,7 +43,24 @@ function App() {
   if (loadingSession) return <div className="app-container" style={{ textAlign: 'center', marginTop: '5rem' }}>Cargando...</div>;
 
   if (!session) {
-    return <Auth />;
+    if (showLogin) {
+      return (
+        <div className="app-container">
+          <button
+            onClick={() => setShowLogin(false)}
+            style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', marginBottom: '1rem' }}
+          >
+            ← Volver al Catálogo
+          </button>
+          <Auth />
+        </div>
+      );
+    }
+    return (
+      <div className="app-container">
+        <CatalogView onRequestLogin={() => setShowLogin(true)} />
+      </div>
+    );
   }
 
   const handleSale = (saleData) => {
