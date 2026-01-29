@@ -9,10 +9,12 @@ import { CustomerManager } from './components/CustomerManager'
 import { SalesRegister } from './components/SalesRegister'
 import { SalesReport } from './components/SalesReport'
 import { Dashboard } from './components/Dashboard'
+import { Settings } from './components/Settings'
 import { useStockUpdates } from './hooks/useStockUpdates'
 import { useCustomers } from './hooks/useCustomers'
 import { useSales } from './hooks/useSales'
-import { Toaster } from 'sonner'
+import { useOrganization } from './hooks/useOrganization'
+import { Toaster, toast } from 'sonner'
 
 function App() {
   const [session, setSession] = useState(null);
@@ -35,12 +37,13 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const [currentView, setCurrentView] = useState('dashboard'); // dashboard, inventory, customers, sales, reports
+  const [currentView, setCurrentView] = useState('dashboard'); // dashboard, inventory, customers, sales, reports, settings
   const [editingProduct, setEditingProduct] = useState(null);
 
   const { products, addProduct, updateProduct, deleteProduct } = useStockUpdates();
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { sales, addSale, deleteSale } = useSales();
+  const { organization } = useOrganization();
 
   if (loadingSession) return <div className="app-container" style={{ textAlign: 'center', marginTop: '5rem' }}>Cargando...</div>;
 
@@ -164,6 +167,8 @@ function App() {
             <SalesReport sales={sales} onVoid={handleVoidSale} />
           </div>
         );
+      case 'settings':
+        return <Settings />;
       default:
         return <div>Vista no encontrada</div>;
     }
@@ -174,8 +179,18 @@ function App() {
       <Toaster position="top-right" richColors />
       <header className="app-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ flex: 1 }}></div>
-          <h1 style={{ flex: 2 }}>Gestión de Stock</h1>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {organization?.logo_url && (
+              <img
+                src={organization.logo_url}
+                alt="Logo"
+                style={{ height: '40px', objectFit: 'contain' }}
+              />
+            )}
+          </div>
+          <h1 style={{ flex: 2, textAlign: 'center' }}>
+            {organization?.name || 'Gestión de Stock'}
+          </h1>
           <div style={{ flex: 1, textAlign: 'right' }}>
             <button onClick={handleLogout} className="btn-danger-outline" style={{ fontSize: '0.8rem' }}>
               Cerrar Sesión
@@ -189,6 +204,7 @@ function App() {
           <button className={`nav-btn ${currentView === 'sales' ? 'active' : ''}`} onClick={() => setCurrentView('sales')}>💰 Ventas</button>
           <button className={`nav-btn ${currentView === 'customers' ? 'active' : ''}`} onClick={() => setCurrentView('customers')}>👥 Clientes</button>
           <button className={`nav-btn ${currentView === 'reports' ? 'active' : ''}`} onClick={() => setCurrentView('reports')}>📊 Reportes</button>
+          <button className={`nav-btn ${currentView === 'settings' ? 'active' : ''}`} onClick={() => setCurrentView('settings')}>⚙️ Configuración</button>
         </nav>
       </header>
 
