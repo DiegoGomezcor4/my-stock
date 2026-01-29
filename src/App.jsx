@@ -51,6 +51,7 @@ function App() {
     if (showLogin) {
       return (
         <div className="app-container">
+          <Toaster position="top-right" richColors />
           <button
             onClick={() => setShowLogin(false)}
             style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', marginBottom: '1rem' }}
@@ -63,6 +64,7 @@ function App() {
     }
     return (
       <div className="app-container">
+        <Toaster position="top-right" richColors />
         <CatalogView onRequestLogin={() => setShowLogin(true)} />
       </div>
     );

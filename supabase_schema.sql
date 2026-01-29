@@ -103,3 +103,17 @@ create policy "Users can update their own sales"
 
 create policy "Users can delete their own sales"
   on sales for delete using (auth.uid() = user_id);
+
+
+-- PUBLIC ACCESS POLICIES (For Online Catalog)
+
+-- Allow anyone to view organizations (to see store name/logo)
+create policy "Public can view organizations"
+  on organizations for select
+  using (true);
+
+-- Allow anyone to view products (to browse catalog)
+create policy "Public can view products"
+  on products for select
+  using (true);
+

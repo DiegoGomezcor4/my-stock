@@ -9,13 +9,22 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
         cost: '',
         minStock: '5',
         image: '',
-        description: ''
+        description: '',
+        margin: '' // New explicit state for margin
     };
 
     const [formData, setFormData] = useState(defaultState);
 
     useEffect(() => {
         if (editingProduct) {
+            const cost = editingProduct.cost || 0;
+            const price = editingProduct.price || 0;
+            // Calculate initial margin
+            let initialMargin = '';
+            if (cost > 0 && price > 0) {
+                initialMargin = (((price - cost) / cost) * 100).toFixed(1);
+            }
+
             setFormData({
                 name: editingProduct.name,
                 quantity: editingProduct.quantity,
@@ -23,7 +32,8 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
                 cost: editingProduct.cost || '',
                 minStock: editingProduct.min_stock || editingProduct.minStock || 5,
                 image: editingProduct.image || '',
-                description: editingProduct.description || ''
+                description: editingProduct.description || '',
+                margin: initialMargin
             });
         } else {
             setFormData(defaultState);
@@ -41,6 +51,9 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
             cost: Number(formData.cost) || 0,
             minStock: Number(formData.minStock) || 0
         };
+        // Remove margin from productData before sending to DB as it is not a DB column usually, 
+        // or keep it if you want, but likely ignored.
+        delete productData.margin;
 
         if (editingProduct) {
             onUpdate(editingProduct.id, productData);
@@ -55,40 +68,50 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        setFormData(prev => {
+            const updated = { ...prev, [name]: value };
+
+            // Logic to keep Margin & Price in sync when Cost or Price changes
+            if (name === 'price' || name === 'cost') {
+                const p = Number(name === 'price' ? value : prev.price) || 0;
+                const c = Number(name === 'cost' ? value : prev.cost) || 0;
+
+                if (c > 0 && p > 0) {
+                    updated.margin = (((p - c) / c) * 100).toFixed(1);
+                } else if (c === 0 && p > 0) {
+                    updated.margin = '100'; // Fallback for 0 cost
+                } else {
+                    updated.margin = '';
+                }
+            }
+            return updated;
+        });
     };
 
     const handleMarginChange = (e) => {
         const marginValue = e.target.value;
         const cost = Number(formData.cost) || 0;
 
-        if (!marginValue) {
-            setFormData(prev => ({ ...prev, price: cost })); // If no margin, price equals cost
-            return;
-        }
+        // 1. Update margin display immediately (allows free typing)
+        setFormData(prev => {
+            const updated = { ...prev, margin: marginValue };
 
-        const marginPercent = Number(marginValue);
-        const newPrice = cost * (1 + marginPercent / 100);
+            // 2. Calculate new price based on incomplete margin typing? 
+            // We should only calc price if marginValue is a valid number.
+            if (marginValue === '' || isNaN(marginValue)) {
+                return updated;
+            }
 
-        setFormData(prev => ({
-            ...prev,
-            price: newPrice.toFixed(2) // Keep 2 decimal places
-        }));
+            const marginPercent = Number(marginValue);
+            const newPrice = cost * (1 + marginPercent / 100);
+            updated.price = newPrice.toFixed(2);
+
+            return updated;
+        });
     };
 
-    // Calculate current margin percent based on price and cost for display/default value
-    // Formula: Margin% = ((Price - Cost) / Cost) * 100
-    const cost = Number(formData.cost) || 0;
-    const price = Number(formData.price) || 0;
-
-    // Calculate display margin. 
-    // If cost is 0, margin is technically infinite or undefined, define as 0 or 100 based on price? 
-    // If price exists and cost is 0, it's 100% profit (infinite markup). Let's handle gracefully.
-    const currentMarginPercent = (cost > 0 && price > 0)
-        ? (((price - cost) / cost) * 100).toFixed(1)
-        : (cost === 0 && price > 0 ? '100' : '0');
-
-    const marginAmount = price - cost;
+    const marginAmount = (Number(formData.price) || 0) - (Number(formData.cost) || 0);
 
     return (
         <form onSubmit={handleSubmit} className="product-form card" style={editingProduct ? { border: '1px solid var(--color-primary)' } : {}}>
@@ -173,7 +196,7 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
                         type="number"
                         id="margin"
                         name="margin"
-                        value={currentMarginPercent}
+                        value={formData.margin}
                         onChange={handleMarginChange}
                         placeholder="%"
                         min="0"
@@ -197,7 +220,7 @@ export function ProductForm({ onAdd, onUpdate, editingProduct, onCancelEdit }) {
                 </div>
             </div>
 
-            {(price > 0 || cost > 0) && (
+            {(Number(formData.price) > 0 || Number(formData.cost) > 0) && (
                 <div className="margin-info" style={{
                     marginBottom: '1rem',
                     padding: '0.5rem',

@@ -49,9 +49,7 @@ export function Auth() {
                     {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
                 </h1>
 
-                <h1 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--color-primary)' }}>
-                    {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
-                </h1>
+
 
                 <form onSubmit={handleAuth}>
                     <div className="form-group">
