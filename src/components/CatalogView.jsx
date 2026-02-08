@@ -1,28 +1,57 @@
 import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { WhatsAppButton } from './WhatsAppButton';
 
-export function CatalogView({ onRequestLogin }) {
+export function CatalogView() {
+    const { userId } = useParams();
     const [products, setProducts] = useState([]);
+    const [organization, setOrganization] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
-
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchPublicProducts();
-    }, []);
+        if (userId) {
+            fetchCatalogData();
+        }
+    }, [userId]);
 
-    async function fetchPublicProducts() {
-        // We fetch all, but in UI we filter/display only what we want.
-        // Ideally, RLS would filter columns, but for now we just don't render sensitive info.
-        const { data, error } = await supabase
-            .from('products')
-            .select('id, name, price, description, image, quantity') // Include quantity just to check availability, but won't show number
-            .order('created_at', { ascending: false });
+    async function fetchCatalogData() {
+        try {
+            setLoading(true);
+            // 1. Fetch Organization Details
+            const { data: orgData, error: orgError } = await supabase
+                .from('organizations')
+                .select('name, logo_url')
+                .eq('user_id', userId)
+                .single();
 
-        if (error) console.error('Error fetching catalog:', error);
-        else setProducts(data || []);
+            if (orgError) {
+                console.error('Error fetching organization:', orgError);
+                window._debugOrgError = orgError;
+            } else {
+                setOrganization(orgData);
+            }
+
+            // 2. Fetch Products
+            const { data: prodData, error: prodError } = await supabase
+                .from('products')
+                .select('id, name, price, description, image, quantity')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (prodError) {
+                console.error('Error fetching catalog:', prodError);
+            } else {
+                setProducts(prodData || []);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const filteredProducts = products.filter(product =>
@@ -58,21 +87,45 @@ export function CatalogView({ onRequestLogin }) {
     const handleWhatsAppOrder = () => {
         if (cart.length === 0) return;
 
-        let message = "Hola! Me interesa hacer el siguiente pedido:\n\n";
+        let message = `Hola! Me interesa hacer el siguiente pedido a *${organization?.name || 'su tienda'}*:\n\n`;
         cart.forEach(item => {
             message += `• ${item.qty}x ${item.name} ($${item.price})\n`;
         });
         message += `\n*Total Estimado: $${total.toFixed(2)}*`;
 
+        // Note: In a real app, you might want to fetch the phone number from the organization settings
         const url = `https://wa.me/5493794145743?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     };
+
+    if (loading) return <div style={{ color: 'white', textAlign: 'center', marginTop: '3rem' }}>Cargando catálogo...</div>;
+
+    if (!organization && !loading) {
+        return (
+            <div style={{ color: 'white', textAlign: 'center', marginTop: '3rem' }}>
+                <h2>Tienda no encontrada</h2>
+                <p>No pudimos encontrar la tienda que buscas.</p>
+                <div style={{ background: '#333', padding: '1rem', margin: '1rem auto', maxWidth: '500px', borderRadius: '4px', textAlign: 'left' }}>
+                    <p><strong>Debug Info:</strong></p>
+                    <p>User ID: {userId}</p>
+                    {/* exposing the error to the user for debugging */}
+                    <p>Error: {JSON.stringify(window._debugOrgError)}</p>
+                </div>
+                <Link to="/login" style={{ color: 'var(--color-primary)' }}>Ir al Login</Link>
+            </div>
+        );
+    }
 
     return (
         <div className="catalog-view">
             <header className="app-header" style={{ marginBottom: '1rem', padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 style={{ fontSize: '1.8rem', margin: 0 }}>Catálogo Online</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {organization?.logo_url && (
+                            <img src={organization.logo_url} alt="Logo" style={{ height: '50px', objectFit: 'contain' }} />
+                        )}
+                        <h1 style={{ fontSize: '1.8rem', margin: 0 }}>{organization?.name || 'Catálogo'}</h1>
+                    </div>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <button
                             className="btn-primary"
@@ -81,12 +134,12 @@ export function CatalogView({ onRequestLogin }) {
                         >
                             🛒 Carrito ({cart.reduce((a, c) => a + c.qty, 0)})
                         </button>
-                        <button
-                            onClick={onRequestLogin}
-                            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer' }}
+                        <Link
+                            to="/login"
+                            style={{ textDecoration: 'none', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.8rem' }}
                         >
-                            Admin Login
-                        </button>
+                            Soy Vendedor
+                        </Link>
                     </div>
                 </div>
             </header>

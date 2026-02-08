@@ -9,10 +9,19 @@ export function useStockUpdates() {
     }, []);
 
     async function fetchProducts() {
-        const { data, error } = await supabase
+        const { data: { user } } = await supabase.auth.getUser();
+
+        let query = supabase
             .from('products')
             .select('*')
             .order('created_at', { ascending: false });
+
+        // If logged in, filter by own ID to ensure we don't see other public products in the dashboard
+        if (user) {
+            query = query.eq('user_id', user.id);
+        }
+
+        const { data, error } = await query;
 
         if (error) console.error('Error fetching products:', error);
         else setProducts(data || []);
