@@ -92,9 +92,47 @@ export function usePurchases() {
         }
     }
 
+    async function deletePurchase(id) {
+        try {
+            // 1. Get purchase details to know what items to revert
+            const purchaseToRemove = purchases.find(p => p.id === id);
+            if (!purchaseToRemove) return;
+
+            // 2. Revert Stock (Subtract quantity)
+            if (purchaseToRemove.items && Array.isArray(purchaseToRemove.items)) {
+                for (const item of purchaseToRemove.items) {
+                    // Logic: If we added X units, deleting the purchase means we remove X units.
+                    // We use the same update logic but subtracting.
+
+                    // Fallback using direct update
+                    const { data: product } = await supabase.from('products').select('quantity').eq('id', item.product_id).single();
+                    if (product) {
+                        await supabase.from('products').update({
+                            quantity: Math.max(0, product.quantity - parseInt(item.quantity))
+                        }).eq('id', item.product_id);
+                    }
+                }
+            }
+
+            // 3. Delete Record
+            const { error } = await supabase
+                .from('purchases')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            setPurchases(purchases.filter(p => p.id !== id));
+            toast.success('Compra eliminada y stock revertido');
+        } catch (error) {
+            console.error('Error deleting purchase:', error);
+            toast.error('Error al eliminar compra');
+        }
+    }
+
     return {
         purchases,
         loading,
-        addPurchase
+        addPurchase,
+        deletePurchase
     };
 }

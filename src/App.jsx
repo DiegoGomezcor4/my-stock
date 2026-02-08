@@ -43,9 +43,22 @@ function DashboardLayout({ session, onLogout }) {
   const { sales, addSale, deleteSale } = useSales();
   const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
   const { expenses, addExpense, deleteExpense } = useExpenses();
-  const { purchases, addPurchase } = usePurchases();
+  const { purchases, addPurchase, deletePurchase } = usePurchases();
   const { organization } = useOrganization();
   const { isAdmin } = useAdmin();
+
+  useEffect(() => {
+    if (organization?.color) {
+      document.documentElement.style.setProperty('--color-primary', organization.color);
+      // Optional: Calculate hover color (darker version)
+      // For simplicity, we just use the same color or let CSS handle it if we used HSL. 
+      // But since we use hex in input type=color, let's just set the hover to the same for now 
+      // or try to darken it slightly if we had a helper. 
+      // Let's just set it to the same to ensure consistency for now, or user can accept default hover behavior?
+      // Actually, app.css has --color-primary-hover. We should update it too.
+      document.documentElement.style.setProperty('--color-primary-hover', organization.color);
+    }
+  }, [organization]);
 
   const handleSale = (saleData) => {
     addSale(saleData);
@@ -122,7 +135,7 @@ function DashboardLayout({ session, onLogout }) {
       case 'expenses':
         return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><ExpenseManager expenses={expenses} suppliers={suppliers} onAdd={addExpense} onDelete={deleteExpense} /></div>;
       case 'purchases':
-        return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><PurchaseManager purchases={purchases} suppliers={suppliers} products={products} onAddPurchase={addPurchase} /></div>;
+        return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><PurchaseManager purchases={purchases} suppliers={suppliers} products={products} onAddPurchase={addPurchase} onDelete={deletePurchase} /></div>;
       case 'settings':
         return <Settings />;
       case 'admin':

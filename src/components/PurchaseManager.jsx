@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export function PurchaseManager({ purchases, suppliers, products, onAddPurchase }) {
+export function PurchaseManager({ purchases, suppliers, products, onAddPurchase, onDelete }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [step, setStep] = useState(1); // 1: Select Supplier, 2: Select Products
     const [selectedSupplierId, setSelectedSupplierId] = useState('');
@@ -92,6 +92,7 @@ export function PurchaseManager({ purchases, suppliers, products, onAddPurchase 
                             <th>Proveedor</th>
                             <th>Items</th>
                             <th>Total</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -109,6 +110,15 @@ export function PurchaseManager({ purchases, suppliers, products, onAddPurchase 
                                     </ul>
                                 </td>
                                 <td>${parseFloat(purchase.total).toFixed(2)}</td>
+                                <td>
+                                    <button className="btn-danger-outline" onClick={() => {
+                                        if (confirm('¿Eliminar compra? Se RESTARÁ el stock agregado.')) {
+                                            onDelete(purchase.id);
+                                        }
+                                    }}>
+                                        Eliminar
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                         {purchases.length === 0 && (

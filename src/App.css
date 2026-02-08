@@ -89,6 +89,12 @@ select {
   align-items: start;
 }
 
+.main-layout aside {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
 @media (max-width: 768px) {
   .main-layout {
     grid-template-columns: 1fr;
@@ -330,4 +336,52 @@ select:focus {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
+}
+
+/* Responsividad para Tablas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.product-table th,
+.product-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.product-table th {
+  background-color: rgba(255, 255, 255, 0.02);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Mejoras Móviles */
+@media (max-width: 768px) {
+  .main-nav {
+    flex-wrap: wrap;
+  }
+
+  .app-container {
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+    padding: 1rem;
+  }
 }

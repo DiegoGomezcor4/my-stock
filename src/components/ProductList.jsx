@@ -86,7 +86,10 @@ export function ProductList({ products, onDelete, onUpdateStock, onEdit }) {
                                     </button>
                                     <button
                                         className="btn-icon"
-                                        onClick={() => onEdit(product)}
+                                        onClick={() => {
+                                            onEdit(product);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
                                         title="Editar"
                                         style={{ fontSize: '1rem', width: 'auto', padding: '0 0.5rem' }}
                                     >

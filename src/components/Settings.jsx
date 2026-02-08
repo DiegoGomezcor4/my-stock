@@ -4,13 +4,14 @@ import { toast } from 'sonner';
 
 export function Settings() {
     const { organization, loading, updateOrganization } = useOrganization();
-    const [formData, setFormData] = useState({ name: '', logo_url: '' });
+    const [formData, setFormData] = useState({ name: '', logo_url: '', color: '#3b82f6' });
 
     useEffect(() => {
         if (organization) {
             setFormData({
                 name: organization.name || '',
-                logo_url: organization.logo_url || ''
+                logo_url: organization.logo_url || '',
+                color: organization.color || '#3b82f6'
             });
         }
     }, [organization]);
@@ -68,6 +69,25 @@ export function Settings() {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="themeColor">Color del Tema</label>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <input
+                                id="themeColor"
+                                type="color"
+                                value={formData.color || '#3b82f6'}
+                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                style={{ width: '50px', height: '50px', padding: '0', border: 'none', cursor: 'pointer', background: 'none' }}
+                            />
+                            <span style={{ color: 'var(--color-text-secondary)' }}>
+                                {formData.color || '#3b82f6'}
+                            </span>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                            Elige el color principal para tu marca.
+                        </p>
                     </div>
 
                     <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
