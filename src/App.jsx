@@ -11,9 +11,15 @@ import { SalesRegister } from './components/SalesRegister'
 import { SalesReport } from './components/SalesReport'
 import { Dashboard } from './components/Dashboard'
 import { Settings } from './components/Settings'
+import { SupplierManager } from './components/SupplierManager'
+import { ExpenseManager } from './components/ExpenseManager'
+import { PurchaseManager } from './components/PurchaseManager'
 import { useStockUpdates } from './hooks/useStockUpdates'
 import { useCustomers } from './hooks/useCustomers'
 import { useSales } from './hooks/useSales'
+import { useSuppliers } from './hooks/useSuppliers'
+import { useExpenses } from './hooks/useExpenses'
+import { usePurchases } from './hooks/usePurchases'
 import { useOrganization } from './hooks/useOrganization'
 import { useAdmin } from './hooks/useAdmin'
 import { AdminDashboard } from './components/AdminDashboard'
@@ -35,6 +41,9 @@ function DashboardLayout({ session, onLogout }) {
   const { products, addProduct, updateProduct, deleteProduct } = useStockUpdates();
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { sales, addSale, deleteSale } = useSales();
+  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
+  const { expenses, addExpense, deleteExpense } = useExpenses();
+  const { purchases, addPurchase } = usePurchases();
   const { organization } = useOrganization();
   const { isAdmin } = useAdmin();
 
@@ -108,6 +117,12 @@ function DashboardLayout({ session, onLogout }) {
         return <div style={{ maxWidth: '800px', margin: '0 auto' }}><CustomerManager customers={customers} onAdd={addCustomer} onUpdate={updateCustomer} onDelete={deleteCustomer} /></div>;
       case 'reports':
         return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><h2>Reporte de Ventas y Ganancias</h2><SalesReport sales={sales} onVoid={handleVoidSale} /></div>;
+      case 'suppliers':
+        return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><SupplierManager suppliers={suppliers} onAdd={addSupplier} onUpdate={updateSupplier} onDelete={deleteSupplier} /></div>;
+      case 'expenses':
+        return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><ExpenseManager expenses={expenses} suppliers={suppliers} onAdd={addExpense} onDelete={deleteExpense} /></div>;
+      case 'purchases':
+        return <div style={{ maxWidth: '1000px', margin: '0 auto' }}><PurchaseManager purchases={purchases} suppliers={suppliers} products={products} onAddPurchase={addPurchase} /></div>;
       case 'settings':
         return <Settings />;
       case 'admin':
@@ -140,6 +155,9 @@ function DashboardLayout({ session, onLogout }) {
           <button className={`nav-btn ${currentView === 'inventory' ? 'active' : ''}`} onClick={() => setCurrentView('inventory')}>📦 Inventario</button>
           <button className={`nav-btn ${currentView === 'sales' ? 'active' : ''}`} onClick={() => setCurrentView('sales')}>💰 Ventas</button>
           <button className={`nav-btn ${currentView === 'customers' ? 'active' : ''}`} onClick={() => setCurrentView('customers')}>👥 Clientes</button>
+          <button className={`nav-btn ${currentView === 'suppliers' ? 'active' : ''}`} onClick={() => setCurrentView('suppliers')}>🚚 Proveedores</button>
+          <button className={`nav-btn ${currentView === 'purchases' ? 'active' : ''}`} onClick={() => setCurrentView('purchases')}>🛒 Compras</button>
+          <button className={`nav-btn ${currentView === 'expenses' ? 'active' : ''}`} onClick={() => setCurrentView('expenses')}>💸 Gastos</button>
           <button className={`nav-btn ${currentView === 'reports' ? 'active' : ''}`} onClick={() => setCurrentView('reports')}>📊 Reportes</button>
           <button className={`nav-btn ${currentView === 'settings' ? 'active' : ''}`} onClick={() => setCurrentView('settings')}>⚙️ Configuración</button>
           {isAdmin && (
